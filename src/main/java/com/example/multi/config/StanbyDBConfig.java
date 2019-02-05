@@ -29,39 +29,36 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableTransactionManagement
 @EnableJpaRepositories(
-        entityManagerFactoryRef = "masterEntityManager",
-        transactionManagerRef = "masterTransactionManager",
-        basePackages = "com.example.multi.dao.master"
+        entityManagerFactoryRef = "stanbyEntityManager",
+        transactionManagerRef = "stanbyTransactionManager",
+        basePackages = "com.example.multi.dao.stanby"
 )
-public class MasterDBConfig {
+public class StanbyDBConfig {
     @Autowired
     private Environment env;
 
-    @Primary
     @Bean
-    public DataSource mysqlDataSource() {
+    public DataSource stanbyDataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(env.getProperty("spring.master.datasource.driver-class-name"));
-        dataSource.setUrl(env.getProperty("spring.master.datasource.url"));
-        dataSource.setUsername(env.getProperty("spring.master.datasource.username"));
-        dataSource.setPassword(env.getProperty("spring.master.datasource.password"));
+        dataSource.setDriverClassName(env.getProperty("spring.stanby.datasource.driver-class-name"));
+        dataSource.setUrl(env.getProperty("spring.stanby.datasource.url"));
+        dataSource.setUsername(env.getProperty("spring.stanby.datasource.username"));
+        dataSource.setPassword(env.getProperty("spring.stanby.datasource.password"));
         return dataSource;
     }
 
-    @Primary
-    @Bean(name = "masterEntityManager")
-    public LocalContainerEntityManagerFactoryBean mysqlEntityManagerFactory(EntityManagerFactoryBuilder builder) {
+    @Bean(name = "stanbyEntityManager")
+    public LocalContainerEntityManagerFactoryBean stanbyEntityManagerFactory(EntityManagerFactoryBuilder builder) {
         return builder
-                .dataSource(mysqlDataSource())
+                .dataSource(stanbyDataSource())
                 .properties(hibernateProperties())
                 .packages(User.class)
                 .persistenceUnit("userPU")
                 .build();
     }
 
-    @Primary
-    @Bean(name = "masterTransactionManager")
-    public PlatformTransactionManager mysqlTransactionManager(@Qualifier("masterEntityManager") EntityManagerFactory entityManagerFactory) {
+    @Bean(name = "stanbyTransactionManager")
+    public PlatformTransactionManager stanbyTransactionManager(@Qualifier("stanbyEntityManager") EntityManagerFactory entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory);
     }
 
